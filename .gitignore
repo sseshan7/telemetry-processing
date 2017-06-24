@@ -1,0 +1,38 @@
+*.scssc
+*.zip
+*.gzip
+*.tgz
+*.DS_Store
+*.swp
+
+# Compiled CSS, unless directly added
+*.sass-cache
+*COMPILE.css
+*.css
+*.css.map
+
+# Intellij project configuration files
+*.idea
+*.iml
+
+# External dependencies
+
+# Build output
+Desktop/nasa_mct/target
+Desktop/nasa_mct/dist
+
+# Mac OS X Finder
+.DS_Store
+
+# Closed source libraries
+Desktop/nasa_mct/closed-lib
+
+# Node, Bower dependencies
+Desktop/nasa_mct/node_modules
+Desktop/nasa_mct/bower_components
+
+# Protractor logs
+Desktop/nasa_mct/protractor/logs
+
+# npm-debug log
+Desktop/nasa_mct/npm-debug.log
