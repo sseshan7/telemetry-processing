@@ -1,5 +1,5 @@
-# IMU-Processing
-This repo will contain the Desktop side code to process, store, and visualize IMU data.
+# telemetry-Processing
+This repo will contain the Desktop side code to process, visualize, and log telemetry.
 
 Requirements:
 1. Read to and write from a serial port
