@@ -18,21 +18,21 @@
 # External dependencies
 
 # Build output
-Desktop/nasa_mct/target
-Desktop/nasa_mct/dist
+target
+dist
 
 # Mac OS X Finder
 .DS_Store
 
 # Closed source libraries
-Desktop/nasa_mct/closed-lib
+closed-lib
 
 # Node, Bower dependencies
-Desktop/nasa_mct/node_modules
-Desktop/nasa_mct/bower_components
+node_modules
+bower_components
 
 # Protractor logs
-Desktop/nasa_mct/protractor/logs
+protractor/logs
 
 # npm-debug log
-Desktop/nasa_mct/npm-debug.log
+npm-debug.log
