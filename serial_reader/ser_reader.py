@@ -4,7 +4,7 @@ import websockets
 
 
 ### Configure Stuff ###
-WEBSOCKET_ADDRESS = 'ws://localhost:8000' # Change this to whatever
+WEBSOCKET_ADDRESS = 'ws://localhost:2009' # Change this to whatever
 
 SERIAL_PORT = '/dev/tty.usbserial'
 SERIAL_BAUDRATE = 115200
@@ -23,6 +23,7 @@ async def dump_to_socket():
             if not data:
                 still_reading = False
             else:
+                data = float(data.strip())
                 await socket.send(data)
 
 
