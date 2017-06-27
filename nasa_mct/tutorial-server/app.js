@@ -120,7 +120,7 @@ var CONFIG = {
 
     wss.on('connection', handleConnection);
 
-    console.log("Example spacecraft running on port ");
+    console.log("Example spacecraft running on port " + CONFIG.port);
     console.log("Press Enter to toggle thruster state.");
     process.stdin.on('data', function (data) {
         spacecraft['prop.thrusters'] =
