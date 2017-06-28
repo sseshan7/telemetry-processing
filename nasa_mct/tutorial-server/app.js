@@ -62,6 +62,10 @@ var CONFIG = {
         var subscriptions = {}, // Active subscriptions for this connection
             handlers = {        // Handlers for specific requests
                 dictionary: function () {
+                    console.log("Dictionary callback: " + JSON.stringify({
+                        type: "dictionary",
+                        value: dictionary
+                    }));
                     ws.send(JSON.stringify({
                         type: "dictionary",
                         value: dictionary
@@ -74,6 +78,11 @@ var CONFIG = {
                     delete subscriptions[id];
                 },
                 history: function (id) {
+                    console.log("History callback: " + JSON.stringify({
+                        type: "history",
+                        id: id,
+                        value: histories[id]
+                    }));
                     ws.send(JSON.stringify({
                         type: "history",
                         id: id,
@@ -86,6 +95,11 @@ var CONFIG = {
             Object.keys(subscriptions).forEach(function (id) {
                 var history = histories[id];
                 if (history) {
+                    console.log("Notifying subscriber " + id + ": " + JSON.stringify({
+                        type: "data",
+                        id: id,
+                        value: history[history.length - 1]
+                    }));
                     ws.send(JSON.stringify({
                         type: "data",
                         id: id,
@@ -97,6 +111,7 @@ var CONFIG = {
 
         // Listen for requests
         ws.on('message', function (message) {
+            console.log("websocket on message: " + message);
             var parts = message.split(' '),
                 handler = handlers[parts[0]];
             if (handler) {
