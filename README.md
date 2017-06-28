@@ -16,3 +16,8 @@ Requirements:
 2. Plot incoming sensor data in real time
 3. Store data in a structured, and easy-to-parse format for post-facto reading and plotting.
 4. Animate a model in 3D according to incoming sensor inputs.
+
+
+#### Dependencies:
+* Python 3.3+
+* [Asyncio and websockets](https://websockets.readthedocs.io/en/stable/index.html)
