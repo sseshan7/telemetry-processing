@@ -20,6 +20,8 @@
 # Build output
 target
 dist
+nasa_mct/target
+nasa_mct/dist
 
 # Mac OS X Finder
 .DS_Store

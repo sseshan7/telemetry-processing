@@ -1,0 +1,2 @@
+pyserial==3.3
+websockets==3.3
