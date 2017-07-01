@@ -1,27 +1,83 @@
 import serial
 import asyncio
 import websockets
+import json
 
+
+"""
+Program Flow:
+- continuously:
+-- read data from serial
+-- listen for msgs from client
+-- update subscribers
+
+- when msg is recieved:
+-- check type of msg (subscribe, unsubscribe, ...) and handle
+
+- subscribe/unsubscribe:
+-- add/remove subscriber to/from set
+
+- dictionary:
+-- send structure of spaceship json object???
+
+- history:
+-- send history of values for item as json object
+"""
 
 ### Configure Stuff ###
-WEBSOCKET_ADDRESS = 'ws://localhost:2009' # Change this to whatever
+WEBSOCKET = {
+'host' : 'localhost',
+'port' : 2009
+}
 
 SERIAL_PORT = '/dev/tty.usbserial'
 SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 1 # Seconds
 #######################
+ser = serial.Serial(port=SERIAL_PORT, baudrate=SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
 
-async def hello(websocket, path):
-    name = await websocket.recv()
-    print("< {}".format(name))
-    greeting = "Hello {}!".format(name)
-    await websocket.send(greeting)
-    print("> {}".format(greeting))
+subscriptions = set() # if we have a finite number, should be a dict
+data = dict() # might end up being a dict of pandas dataframes or something
 
-start_server = websockets.serve(hello, 'localhost', 2009)
+if __name__ == '__main__':
+    # probably read serial data here
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+    start_server = websockets.serve(recieve_messages, WEBSOCKET['host'], WEBSOCKET['port'])
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()
+
+
+
+
+async def recieve_messages(websocket, path):
+    still_reading = True
+    while still_reading:
+        # Assuming msgs are recieved as text frames, not binary frames
+        message = await websocket.recv()
+        message = message.split()
+        # I'm assuming (maybe wrongly) that msgs are in the form
+        # "history (element)" and so on for the other commands
+        if message[0] == "history":
+            await handle_history(message[1])
+        # elif ...
+
+async def update_subscribers(websocket, path):
+    # foreach subscription in subscriptions, send live data
+    global subscriptions
+
+async def handle_history(websocket, path, element):
+    # send data as json object
+    global data
+
+def handle_subscribe(element):
+    # add subscription to subscriptions
+    global subscriptions
+
+def handle_unsubscribe(element):
+    # remove subscription from subscriptions
+    global subscriptions
+
+
 
 '''
 async def dump_to_socket():
