@@ -41,12 +41,13 @@ data = dict()  # might end up being a dict of pandas dataframes or something
 class SerialReader(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport
+        print('port opened:', transport)
         transport.serial.rts = False
         transport.write(b'hello world\n')  # test write
 
     def data_received(self, incoming):
         # temporary, should instead parse and save data
-        print('received: ', incoming)
+        print('received:', incoming)
 
     def connection_lost(self, exc):
         print('connection lost')
