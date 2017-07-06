@@ -1,7 +1,8 @@
 import serial
 import asyncio
 import websockets
-
+import json
+import re
 
 ### Configure Stuff ###
 WEBSOCKET_ADDRESS = 'ws://localhost:2009' # Change this to whatever
@@ -13,10 +14,21 @@ SERIAL_TIMEOUT = 1 # Seconds
 
 async def hello(websocket, path):
     name = await websocket.recv()
+    print('entered')
     print("< {}".format(name))
-    greeting = "Hello {}!".format(name)
-    await websocket.send(greeting)
-    print("> {}".format(greeting))
+    name_args = name.split()
+    if name_args[0] == 'dictionary':
+        with open('dictionary.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        text = json.dumps(data, separators=(',', ':'))
+        print(text)
+        await websocket.send(text)
+    elif name_args[0] == 'history':
+        None
+    elif name_args[0] == 'subscribe':
+        None
+    elif name_args[0] == 'unsubscribe':
+        None
 
 start_server = websockets.serve(hello, 'localhost', 2009)
 
