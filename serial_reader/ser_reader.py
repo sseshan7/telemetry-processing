@@ -34,29 +34,46 @@ SERIAL_PORT = '/dev/tty.usbserial'
 SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 1  # Seconds
 #######################
-# ser = serial.Serial(port=SERIAL_PORT, baudrate=SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
 ### Global Variables ###
 subscriptions = set()  # if we have a finite number, should be a dict
-data = defaultdict(list)  # might end up being a dict of pandas dataframes or something
+data = defaultdict(list)  # might end up being a dict of pandas dataframes or
+#  something
 
 
 class SerialReader(asyncio.Protocol):
     def connection_made(self, transport):
+        """
+        when connection is established, writes a test message to serial
+        :param transport:
+        """
         self.transport = transport
         print('port opened:', transport)
         transport.serial.rts = False
-        transport.write(b'hello world\n')  # test write
+        transport.write(b'hello world\n')
 
     def data_received(self, incoming):
-        # temporary, should instead parse and save data
+        """
+        On recieving data, parses it and writes it to our structure
+        :param incoming:
+        """
+        # temporary
         print('received:', incoming)
 
     def connection_lost(self, exc):
+        """
+        Closes loop when connection is lost
+        :param exc:
+        """
         print('connection lost')
         self.transport.loop.stop()
 
 
 async def receive_messages(websocket, path):
+    """
+    Handles recieving msgs from the js browser client
+    :param websocket: the websocket being read from and written to
+    :param path:
+    """
     still_reading = True
     while still_reading:
         # Assuming msgs are recieved as text frames, not binary frames
@@ -76,31 +93,49 @@ async def receive_messages(websocket, path):
 
 
 async def generateData():
+    """
+    Generates test data
+    """
     while True:
         await asyncio.sleep(1)
         t = int(time.time())
         var = {'timestamp': t, 'value': math.sin(t)}
-        histories['pwr.temp'].append(var)
+        # histories['pwr.temp'].append(var)
 
 
 async def update_subscribers(websocket, path):
-    # foreach subscription in subscriptions, send live data
+    """
+    Foreach subscriber in subscriptions, send relevant data
+    :param websocket: socket to write to
+    :param path:
+    """
     global subscriptions
 
 
 async def handle_history(websocket, path, element):
-    # send data as json object
+    """
+    Send data as json object
+    :param websocket: socket to write to
+    :param path:
+    :param element:
+    """
     global data
     global subscriptions
 
 
 def handle_subscribe(element):
-    # add subscription to subscriptions
+    """
+    Add subscriber to subscriptions
+    :param element: element being subscribed to
+    """
     global subscriptions
 
 
 def handle_unsubscribe(element):
-    # remove subscription from subscriptions
+    """
+    Remove subscriber from subscriptions
+    :param element: element being unsubscribed from
+    """
     global subscriptions
 
 
@@ -114,32 +149,12 @@ if __name__ == '__main__':
 
     start_server = websockets.serve(receive_messages, WEBSOCKET['host'],
                                     WEBSOCKET['port'])
-    loop.run_until_complete(start_server)
+    loop.run_until_complete(asyncio.gather(
+        start_server,
+        generateData(),
+    ))
+    # putting serial_coroutine in the above statement might also work?
     asyncio.ensure_future(serial_coroutine)
     loop.run_forever()
 
 
-# start_server = websockets.serve(client_handler, 'localhost', 2009)
-# asyncio.get_event_loop().run_until_complete(start_server)
-# asyncio.ensure_future(generateData())
-# asyncio.get_event_loop().run_forever()
-
-# async def dump_to_socket():
-#     ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
-#
-#     async with websockets.connect(WEBSOCKET_ADDRESS) as socket:
-#         still_reading = True
-#         while still_reading:
-#             data = ser.readline()
-#             # Stops reading data if it recieves an empty line, might not be what we want
-#             if not data:
-#                 still_reading = False
-#             else:
-#                 data = float(data.strip())
-#                 await socket.send(data)
-#
-#
-# if __name__ == "__main__":
-#     # Socket should close itself after it's done
-#     server = websockets.serve(callback, 'localhost', 2009)
-#     #asyncio.get_event_loop().run_until_complete(dump_to_socket())
