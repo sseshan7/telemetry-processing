@@ -111,15 +111,13 @@ async def generateData():
         await asyncio.sleep(1)
         t = int(time.time() * 1000)
         var = {'timestamp': t, 'value': math.sin(t)}
-        # histories['pwr.temp'].append(var)
+        histories['pwr.temp'].append(var)
 
 async def notify_subscribers(websocket, sub_id):
     if sub_id is None:
         print('subscriber_id is NONE!!!!')
     else:
-        print('notify entered')
         while True:
-            print('notify entered again')
             await asyncio.sleep(1)
             data_dict = data_dict = {'type': 'data', 'id': sub_id, 'value': histories[sub_id][-1]}
             sock_data = json.dumps(data_dict, separators=(',', ':'))
