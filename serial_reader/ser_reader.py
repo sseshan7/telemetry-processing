@@ -37,6 +37,8 @@ SERIAL_TIMEOUT = 1  # Seconds
 ### Global Variables ###
 subscriptions = set()  # if we have a finite number, should be a dict
 data = defaultdict(list)  # might end up being a dict of pandas dataframes or
+
+
 #  something
 
 
@@ -139,18 +141,25 @@ def handle_unsubscribe(element):
     global subscriptions
 
 
-def parse_serial_data(raw_data):
+def package_data(raw_data):
     """
-    Parses and organizes raw serial data
-    :param raw_data: the raw string read from serial
-    :return: a dict (str -> triple[float]) of sensor values keyed by sensor
+    Parses, packages, and organizes serial data
+    :param raw_data: raw string read from serial
+    :return a dict (str -> triple[str]) of json payloads keyed by sensor (should
+     probably be keyed by id so its cleaner to store)
     """
     readings = [float(i) for i in raw_data.split()]
+    jsons = []
+    for reading in readings:
+        timestamp = int(time.time())
+        payload = {'timestamp': timestamp, 'value': reading}
+        jsons.append(json.dumps(payload, separators=(',', ':')))
     return {
-        'accel': (readings[0], readings[1], readings[2]),
-        'gyro': (readings[3], readings[4], readings[5]),
-        'mag': (readings[6], readings[7], readings[8])
+        'accel': (jsons[0], jsons[1], jsons[2]),  # ax, ay, az
+        'gyro': (jsons[3], jsons[4], jsons[5]),  # gx, gy, gz
+        'mag': (jsons[6], jsons[7], jsons[8])  # mx, my, mz
     }
+
 
 if __name__ == '__main__':
     # probably read serial data here
@@ -169,5 +178,3 @@ if __name__ == '__main__':
     # putting serial_coroutine in the above statement might also work?
     asyncio.ensure_future(serial_coroutine)
     loop.run_forever()
-
-
