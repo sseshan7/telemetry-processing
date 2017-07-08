@@ -35,11 +35,9 @@ SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 1  # Seconds
 #######################
 ### Global Variables ###
-subscriptions = set()  # if we have a finite number, should be a dict
-data = defaultdict(list)  # might end up being a dict of pandas dataframes or
-
-
-#  something
+# subscriptions = set()  # if we have a finite number, should be a dict
+histories = defaultdict(list)  # might end up being a dict of pandas dataframes or something
+subscriber_id = None
 
 
 class SerialReader(asyncio.Protocol):
@@ -77,21 +75,32 @@ async def receive_messages(websocket, path):
     :param path:
     """
     still_reading = True
+    count = 1
     while still_reading:
+        print('waiting for message {}'.format(count))
+        count += 1
         # Assuming msgs are recieved as text frames, not binary frames
         message = await websocket.recv()
+        print('incoming: {}'.format(message))
         message = message.split()
-        # I'm assuming (maybe wrongly) that msgs are in the form
-        # "history (element)" and so on for the other commands
         if message[0] == "history":
-            await handle_history(element=message[1])
-            # elif ...
+            craft_system = message[1]
+            hist_dict = {'type': 'history', 'id': craft_system, 'value': histories[craft_system]}
+            sock_data = json.dumps(hist_dict, separators=(',', ':'))
+            print(sock_data)
+            await websocket.send(sock_data)
         elif message[0] == 'dictionary':
+            data = None
             with open('dictionary.json', 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            text = json.dumps(data, separators=(',', ':'))
-            print(text)
-            await websocket.send(text)
+            sock_data = json.dumps(data, separators=(',', ':'))
+            print(sock_data)
+            await websocket.send(sock_data)
+        elif message[0] == 'subscribe':
+            craft_system = message[1]
+            print('craft_system id: {}'.format(craft_system))
+            subscriber_id = craft_system
+            await notify_subscribers(websocket, subscriber_id)
 
 
 async def generateData():
@@ -100,46 +109,22 @@ async def generateData():
     """
     while True:
         await asyncio.sleep(1)
-        t = int(time.time())
+        t = int(time.time() * 1000)
         var = {'timestamp': t, 'value': math.sin(t)}
         # histories['pwr.temp'].append(var)
 
-
-async def update_subscribers(websocket, path):
-    """
-    Foreach subscriber in subscriptions, send relevant data
-    :param websocket: socket to write to
-    :param path:
-    """
-    global subscriptions
-
-
-async def handle_history(websocket, path, element):
-    """
-    Send data as json object
-    :param websocket: socket to write to
-    :param path:
-    :param element:
-    """
-    global data
-    global subscriptions
-
-
-def handle_subscribe(element):
-    """
-    Add subscriber to subscriptions
-    :param element: element being subscribed to
-    """
-    global subscriptions
-
-
-def handle_unsubscribe(element):
-    """
-    Remove subscriber from subscriptions
-    :param element: element being unsubscribed from
-    """
-    global subscriptions
-
+async def notify_subscribers(websocket, sub_id):
+    if sub_id is None:
+        print('subscriber_id is NONE!!!!')
+    else:
+        print('notify entered')
+        while True:
+            print('notify entered again')
+            await asyncio.sleep(1)
+            data_dict = data_dict = {'type': 'data', 'id': sub_id, 'value': histories[sub_id][-1]}
+            sock_data = json.dumps(data_dict, separators=(',', ':'))
+            print('notifying subscribers: {}'.format(sock_data))
+            await websocket.send(sock_data)
 
 def package_data(raw_data):
     """
@@ -161,20 +146,8 @@ def package_data(raw_data):
     }
 
 
-if __name__ == '__main__':
-    # probably read serial data here
-    loop = asyncio.get_event_loop()
-    serial_coroutine = serial_asyncio.create_serial_connection(loop,
-                                                               SerialReader,
-                                                               SERIAL_PORT,
-                                                               SERIAL_BAUDRATE)
+start_server = websockets.serve(receive_messages, 'localhost', 2009)
 
-    start_server = websockets.serve(receive_messages, WEBSOCKET['host'],
-                                    WEBSOCKET['port'])
-    loop.run_until_complete(asyncio.gather(
-        start_server,
-        generateData(),
-    ))
-    # putting serial_coroutine in the above statement might also work?
-    asyncio.ensure_future(serial_coroutine)
-    loop.run_forever()
+asyncio.get_event_loop().run_until_complete(start_server)
+asyncio.ensure_future(generateData())
+asyncio.get_event_loop().run_forever()
