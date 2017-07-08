@@ -139,6 +139,19 @@ def handle_unsubscribe(element):
     global subscriptions
 
 
+def parse_serial_data(raw_data):
+    """
+    Parses and organizes raw serial data
+    :param raw_data: the raw string read from serial
+    :return: a dict (str -> triple[float]) of sensor values keyed by sensor
+    """
+    readings = [float(i) for i in raw_data.split()]
+    return {
+        'accel': (readings[0], readings[1], readings[2]),
+        'gyro': (readings[3], readings[4], readings[5]),
+        'mag': (readings[6], readings[7], readings[8])
+    }
+
 if __name__ == '__main__':
     # probably read serial data here
     loop = asyncio.get_event_loop()
