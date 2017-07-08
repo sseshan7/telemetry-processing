@@ -107,44 +107,9 @@ async def notify_subscribers(websocket, sub_id):
             print('notifying subscribers: {}'.format(sock_data))
             await websocket.send(sock_data)
 
-
-# async def update_subscribers(websocket, path):
-#     # foreach subscription in subscriptions, send live data
-#     global subscriptions
-
-
-# async def handle_history(websocket, path, element):
-#     # send data as json object
-#     global data
-#     global subscriptions
-
-
-# def handle_subscribe(element):
-#     # add subscription to subscriptions
-#     global subscriptions
-
-
-# def handle_unsubscribe(element):
-#     # remove subscription from subscriptions
-#     global subscriptions
-
 start_server = websockets.serve(receive_messages, 'localhost', 2009)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.ensure_future(generateData())
 asyncio.get_event_loop().run_forever()
 
-
-# if __name__ == '__main__':
-#     # probably read serial data here
-#     loop = asyncio.get_event_loop()
-#     serial_coroutine = serial_asyncio.create_serial_connection(loop,
-#                                                                SerialReader,
-#                                                                SERIAL_PORT,
-#                                                                SERIAL_BAUDRATE)
-
-#     start_server = websockets.serve(receive_messages, WEBSOCKET['host'],
-#                                     WEBSOCKET['port'])
-#     loop.run_until_complete(start_server)
-#     asyncio.ensure_future(serial_coroutine)
-#     loop.run_forever()
