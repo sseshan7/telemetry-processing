@@ -34,6 +34,7 @@ SERIAL_PORT = '/dev/tty.usbserial'
 SERIAL_BAUDRATE = 115200
 SERIAL_TIMEOUT = 1  # Seconds
 #######################
+
 ### Global Variables ###
 # subscriptions = set()  # if we have a finite number, should be a dict
 histories = defaultdict(list)  # might end up being a dict of pandas dataframes or something
@@ -111,7 +112,7 @@ async def generateData():
         await asyncio.sleep(1)
         t = int(time.time() * 1000)
         var = {'timestamp': t, 'value': math.sin(t)}
-        # histories['pwr.temp'].append(var)
+        histories['pwr.temp'].append(var)
 
 async def notify_subscribers(websocket, sub_id):
     if sub_id is None:
@@ -146,8 +147,13 @@ def package_data(raw_data):
     }
 
 
-start_server = websockets.serve(receive_messages, 'localhost', 2009)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.ensure_future(generateData())
+start_server = websockets.serve(receive_messages,
+                                WEBSOCKET['host'],
+                                WEBSOCKET['port'])
+loop = asyncio.get_event_loop()
+serial_coroutine = serial_asyncio.create_serial_connection(loop, SerialReader,
+                                                           SERIAL_PORT,
+                                                           SERIAL_BAUDRATE)
+loop.run_until_complete(start_server)
+asyncio.ensure_future(serial_coroutine)
 asyncio.get_event_loop().run_forever()
