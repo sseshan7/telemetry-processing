@@ -118,9 +118,7 @@ async def notify_subscribers(websocket, sub_id):
     if sub_id is None:
         print('subscriber_id is NONE!!!!')
     else:
-        print('notify entered')
         while True:
-            print('notify entered again')
             await asyncio.sleep(1)
             data_dict = data_dict = {'type': 'data', 'id': sub_id, 'value': histories[sub_id][-1]}
             sock_data = json.dumps(data_dict, separators=(',', ':'))
