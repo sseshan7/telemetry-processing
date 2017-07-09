@@ -12,14 +12,13 @@ To run the telemetry viewer, do the following:
 
 This repo will contain the Desktop side code to process, visualize, and log telemetry.
 
-#### Dependencies:
+#### Python Dependencies:
+*It is recommended you use `virtualenv` when running and developing the python code inside `serial_reader/`*
 * Python 3.5+
   * If you're on ubuntu, you can follow: <https://askubuntu.com/questions/865554/how-do-i-install-python-3-6-using-apt-get> to install
   * If you're on mac, install `pyenv` using `brew` just like this link says: <https://news.ycombinator.com/item?id=13244866>
     and then install the appropriate version of python using `pyenv`.
   * If you're on windows, install from <https://www.python.org/downloads/release/python-361/>
-
-*It is recommended you use `virtualenv` when running and developing on the python code inside `serial_reader/`*
 * [Asyncio and websockets](https://websockets.readthedocs.io/en/stable/index.html)
 * [pyserial](http://pyserial.readthedocs.io/en/latest/pyserial.html)
 * [pyserial-asyncio](http://pyserial-asyncio.readthedocs.io/en/latest/shortintro.html)
