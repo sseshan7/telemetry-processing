@@ -67,10 +67,16 @@ class SerialReader(asyncio.Protocol):
         On receiving data, parses it and writes it to our structure
         :param incoming: Line of data read from serial
         """
-        data = incoming.decode('utf-8')
-        data = float(data.replace('\r\n', ''))
-        histories['pwr.temp'].append({'timestamp': int(time.time() * 1000),
-                                      'value': data})
+        # data = incoming.decode('utf-8')
+        # data = float(data.replace('\r\n', ''))
+        # histories['pwr.temp'].append({'timestamp': int(time.time() * 1000),
+        #                               'value': data})
+        raw_data = [float(i) for i in incoming.split()]
+        pkg = {
+        'accel': (raw_data[0], raw_data[1], raw_data[2]),
+        'gyro': (raw_data[3], raw_data[4], raw_data[5]),
+        'mag': (raw_data[6], raw_data[7], raw_data[8])
+        }
         print('received:', incoming)
 
     def connection_lost(self, exc):
