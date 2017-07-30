@@ -40,18 +40,12 @@ SERIAL = {
 }
 
 #######################
-
 # Global Variables
+histories = defaultdict(list) # Contains all data recorded
+data_buffer = queue.Queue() # Buffer queue to hold the data to be immediately sent over websocket
+sockets = [None] # global list that contains socket connections to share among coroutines
 
-# Contains all data recorded
-histories = defaultdict(list)
-
-data_buffer = queue.Queue()
-sockets = [None]
-
-# System currently subscribed to
-subscriber_id = None
-
+subscriber_id = None # ID of the data stream currently subscribed to
 #######################
 
 
@@ -61,16 +55,19 @@ class SerialReader(asyncio.Protocol):
         When connection is established, notifies serial
         :param transport: object that abstracts communication with serial
         """
+
         self.transport = transport
         print('port opened:', transport)
         transport.serial.rts = False
         transport.write(b'Connection Established\n')
+
 
     def data_received(self, incoming):
         """
         On receiving data, parses it and writes it to our structure
         :param incoming: Line of data read from serial
         """
+
         sub_id = subscriber_id
         data = incoming.decode('utf-8')
         raw_data = [float(i) for i in data.split()]
@@ -94,13 +91,16 @@ class SerialReader(asyncio.Protocol):
 
         print(raw_data)
 
+
     def connection_lost(self, exc):
         """
         Closes loop when connection is lost
         :param exc: (optional) exception to be thrown
         """
+
         print('connection lost')
         self.transport.loop.stop()
+
 
 async def receive_messages(websocket, path):
     """
@@ -108,6 +108,7 @@ async def receive_messages(websocket, path):
     :param websocket: the websocket being read from and written to
     :param path: (optional) url path
     """
+
     global subscriber_id
     print("Entered receive messages")
     sockets[0] = websocket
@@ -143,9 +144,10 @@ async def receive_messages(websocket, path):
 
 async def notify_subscribers():
     """
-    Sends most recent sensor readings to client
+    An asyncio coroutine that sends data to client as it's received from serial device
     :param websocket: the socket to write to
     """
+
     count = 0
     sub_id = None
     while True:
