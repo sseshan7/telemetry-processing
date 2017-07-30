@@ -4,6 +4,7 @@ import websockets
 import json
 from collections import defaultdict
 import time
+import queue
 
 # Program Flow:
 # - continuously:
@@ -44,9 +45,12 @@ SERIAL = {
 
 # Contains all data recorded
 histories = defaultdict(list)
+
+data_buffer = queue.Queue()
+sockets = [None]
+
 # System currently subscribed to
 subscriber_id = None
-
 
 #######################
 
@@ -67,17 +71,28 @@ class SerialReader(asyncio.Protocol):
         On receiving data, parses it and writes it to our structure
         :param incoming: Line of data read from serial
         """
-        # data = incoming.decode('utf-8')
-        # data = float(data.replace('\r\n', ''))
-        # histories['pwr.temp'].append({'timestamp': int(time.time() * 1000),
-        #                               'value': data})
-        raw_data = [float(i) for i in incoming.split()]
-        pkg = {
-        'accel': (raw_data[0], raw_data[1], raw_data[2]),
-        'gyro': (raw_data[3], raw_data[4], raw_data[5]),
-        'mag': (raw_data[6], raw_data[7], raw_data[8])
-        }
-        print('received:', incoming)
+        sub_id = subscriber_id
+        data = incoming.decode('utf-8')
+        raw_data = [float(i) for i in data.split()]
+        pkg = {'accel': (raw_data[0], raw_data[1], raw_data[2]),
+                'gyro': (raw_data[3], raw_data[4], raw_data[5]),
+                'mag': (raw_data[6], raw_data[7], raw_data[8])}
+
+        t = int(time.time() * 1000)
+        histories['accel.x'].append({'timestamp': t, 'value': pkg['accel'][0]})
+        histories['accel.y'].append({'timestamp': t, 'value': pkg['accel'][1]})
+        histories['accel.z'].append({'timestamp': t, 'value': pkg['accel'][2]})
+        histories['gyro.x'].append({'timestamp': t, 'value': pkg['gyro'][0]})
+        histories['gyro.y'].append({'timestamp': t, 'value': pkg['gyro'][1]})
+        histories['gyro.z'].append({'timestamp': t, 'value': pkg['gyro'][2]})
+        histories['mag.x'].append({'timestamp': t, 'value': pkg['mag'][0]})
+        histories['mag.y'].append({'timestamp': t, 'value': pkg['mag'][1]})
+        histories['mag.z'].append({'timestamp': t, 'value': pkg['mag'][2]})
+
+        if sub_id is not None:
+            data_buffer.put(histories[sub_id][-1])
+
+        print(raw_data)
 
     def connection_lost(self, exc):
         """
@@ -87,7 +102,6 @@ class SerialReader(asyncio.Protocol):
         print('connection lost')
         self.transport.loop.stop()
 
-
 async def receive_messages(websocket, path):
     """
     Handles recieving msgs from the js browser client
@@ -95,53 +109,56 @@ async def receive_messages(websocket, path):
     :param path: (optional) url path
     """
     global subscriber_id
+    print("Entered receive messages")
+    sockets[0] = websocket
     still_reading = True
     count = 1
+    mycount = 0
     while still_reading:
+        print("in receive messages loop: {}".format(mycount))
+        mycount += 1
         print('waiting for message {}'.format(count))
         count += 1
         # Messages are received as text frames
         message = await websocket.recv()
         print('incoming: {}'.format(message))
         message = message.split()
-        if message[0] == "history":
-            craft_system = message[1]
-            hist_dict = {'type': 'history',
-                         'id': craft_system,
-                         'value': histories[craft_system]}
-            sock_data = json.dumps(hist_dict, separators=(',', ':'))
-            print(sock_data)
-            await websocket.send(sock_data)
-        elif message[0] == 'dictionary':
+        if message[0] == 'dictionary':
             data = None
             with open('dictionary.json', 'r', encoding='utf-8') as f:
                 data = json.load(f)
             sock_data = json.dumps(data, separators=(',', ':'))
             print(sock_data)
             await websocket.send(sock_data)
-        elif message[0] == 'subscribe':
+        elif message[0] == "history" or 'subscribe':
             craft_system = message[1]
-            print('craft_system id: {}'.format(craft_system))
             subscriber_id = craft_system
-            await notify_subscribers(websocket, subscriber_id)
+            hist_dict = {'type': 'history',
+                         'id': craft_system,
+                         'value': histories[craft_system]}
+            sock_data = json.dumps(hist_dict, separators=(',', ':'))
+            print(sock_data)
+            await websocket.send(sock_data)
 
 
-async def notify_subscribers(websocket, sub_id):
+async def notify_subscribers():
     """
     Sends most recent sensor readings to client
     :param websocket: the socket to write to
-    :param sub_id: the subscribed system id
     """
-    if sub_id is None:
-        print('subscriber_id is NONE!!!!')
-    else:
-        while True:
-            await asyncio.sleep(1)
-            data_dict = {'type': 'data', 'id': sub_id,
-                         'value': histories[sub_id][-1]}
+    count = 0
+    sub_id = None
+    while True:
+        try:
+            val = data_buffer.get(False) # this call is blocking
+            sub_id = subscriber_id
+            print("NOTIFYING SUBSCRIBERS: {} count: {}".format(sub_id, count))
+            data_dict = {'type': 'data', 'id': sub_id, 'value': val}
             sock_data = json.dumps(data_dict, separators=(',', ':'))
-            print('notifying subscribers: {}'.format(sock_data))
-            await websocket.send(sock_data)
+            await sockets[0].send(sock_data)
+            count += 1
+        except queue.Empty:
+            await asyncio.sleep(0.05)
 
 
 if __name__ == "__main__":
@@ -154,5 +171,6 @@ if __name__ == "__main__":
                                                                SERIAL['port'],
                                                                SERIAL['baudrate'])
     loop.run_until_complete(start_server)
+    asyncio.ensure_future(notify_subscribers())
     asyncio.ensure_future(serial_coroutine)
     asyncio.get_event_loop().run_forever()

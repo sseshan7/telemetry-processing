@@ -5,13 +5,61 @@
         "identifier": "sc",
         "subsystems": [
             {
-                "name": "Power",
-                "identifier": "pwr",
+                "name": "GNC",
+                "identifier": "gnc",
                 "measurements": [
                     {
-                        "name": "Generator Temperature",
-                        "identifier": "pwr.temp",
-                        "units": "\u0080C",
+                        "name": "x-axis Acceleration",
+                        "identifier": "accel.x",
+                        "units": "g",
+                        "type": "float"
+                    },
+                    {
+                        "name": "y-axis Acceleration",
+                        "identifier": "accel.y",
+                        "units": "g",
+                        "type": "float"
+                    },
+                    {
+                        "name": "z-axis acceleration",
+                        "identifier": "accel.z",
+                        "units": "g",
+                        "type": "float"
+                    },
+                    {
+                        "name": "x-axis angular rate",
+                        "identifier": "gyro.x",
+                        "units": "deg/s",
+                        "type": "float"
+                    },
+                    {
+                        "name": "y-axis angular rate",
+                        "identifier": "gyro.y",
+                        "units": "deg/s",
+                        "type": "float"
+                    },
+                    {
+                        "name": "z-axis angular rate",
+                        "identifier": "gyro.z",
+                        "units": "deg/s",
+                        "type": "float"
+                    },
+                    {
+                        "name": "x-axis magnetometer",
+                        "identifier": "mag.x",
+                        "units": "lol",
+                        "type": "float"
+                    },
+                    {
+                        "name": "y-axis magnetometer",
+                        "identifier": "mag.y",
+                        "units": "lol",
+                        "type": "float"
+                    },
+                    {
+                        "name": "z-axis magnetometer",
+                        "identifier": "mag.z",
+                        "units": "lol",
                         "type": "float"
                     }
                 ]

@@ -8,7 +8,7 @@ async def generate_data(data_storage):
     Generates dummy data for testing
     """
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.01)
         t = int(time.time() * 1000)
         var = {'timestamp': t, 'value': math.sin(t)}
         data_storage['pwr.temp'].append(var)
