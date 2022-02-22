@@ -4,8 +4,8 @@ To run the telemetry viewer, make sure you have `npm` at least version 3.3.6 and
 - You can get these by first installing `nvm`, Node Version Manager.
 To run the telemetry viewer, do the following:
 1. Clone this repo
-2. `cd` into the repo
-3. `cd nasa_mct`
+2. Clone the [Nasa OpenMCT](https://github.com/nasa/openmct) repo next to this repo
+3. `cd openmct`
 4. `npm install`
 5. `npm start`
 6. Open a browser tab and go to `localhost:2008`
